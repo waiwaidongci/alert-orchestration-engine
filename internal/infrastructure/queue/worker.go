@@ -20,9 +20,14 @@ func NewWorker(q *Memory, h Handler) *Worker {
 }
 func (w *Worker) Start(ctx context.Context) {
 	go func() {
-		<-w.stop
+		defer w.finish()
+		select {
+		case <-ctx.Done():
+		case <-w.stop:
+		}
 	}()
 }
+func (w *Worker) finish() { close(w.done) }
 func (w *Worker) Stop() { w.once.Do(func() { close(w.stop) }); <-w.done }
 func (w *Worker) Process(ctx context.Context, msg Message) error {
 	if w.handler == nil {

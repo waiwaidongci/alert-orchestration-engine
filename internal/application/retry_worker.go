@@ -22,11 +22,12 @@ func NewRetryWorker(log *slog.Logger, repo NotificationRepository) *RetryWorker 
 }
 func (w *RetryWorker) Start(ctx context.Context) {
 	go func() {
+		defer w.finish()
 		ticker := time.NewTicker(w.interval)
 		defer ticker.Stop()
 		for {
 			select {
-			case <-context.Background().Done():
+			case <-ctx.Done():
 				return
 			case <-w.stop:
 				return
@@ -36,6 +37,7 @@ func (w *RetryWorker) Start(ctx context.Context) {
 		}
 	}()
 }
+func (w *RetryWorker) finish() { close(w.done) }
 func (w *RetryWorker) Stop() { w.once.Do(func() { close(w.stop) }); <-w.done }
 func (w *RetryWorker) tick(ctx context.Context) {
 	items, err := w.repo.List(ctx, "", 100)
