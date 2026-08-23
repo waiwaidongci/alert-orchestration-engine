@@ -1,0 +1,29 @@
+openapi: 3.0.3
+info:
+  title: Alert Orchestration Engine API
+  version: 1.0.0
+paths:
+  /healthz:
+    get: {responses: {'200': {description: OK}}}
+  /readyz:
+    get: {responses: {'200': {description: Ready}, '503': {description: Not ready}}}
+  /metrics:
+    get: {responses: {'200': {description: Prometheus metrics}}}
+  /api/v1/events:
+    post:
+      summary: Ingest normalized event
+      responses: {'202': {description: Accepted}, '400': {description: Invalid request}}
+  /api/v1/alerts:
+    get: {summary: List alerts, responses: {'200': {description: Alert list}}}
+  /api/v1/alerts/{id}/acknowledge:
+    post: {summary: Acknowledge alert, responses: {'200': {description: Updated alert}}}
+  /api/v1/alerts/{id}/resolve:
+    post: {summary: Resolve alert, responses: {'200': {description: Updated alert}}}
+  /api/v1/rules:
+    get: {summary: List rules, responses: {'200': {description: Rule list}}}
+    post: {summary: Create rule, responses: {'201': {description: Created}}}
+  /api/v1/silences:
+    get: {summary: List silence windows, responses: {'200': {description: Silence list}}}
+    post: {summary: Create silence window, responses: {'201': {description: Created}}}
+  /api/v1/notifications:
+    get: {summary: List notification records, responses: {'200': {description: Notification list}}}
