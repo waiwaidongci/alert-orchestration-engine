@@ -16,7 +16,8 @@ func Summarize(items []*Alert) Summary {
 		case Open:
 			s.Open++
 			if s.OldestOpen == nil || a.FirstSeen.Before(*s.OldestOpen) {
-				s.OldestOpen = &a.FirstSeen
+				t := a.FirstSeen
+				s.OldestOpen = &t
 			}
 		case Acknowledged:
 			s.Acknowledged++
@@ -36,5 +37,5 @@ func (s Summary) RatioResolved() float64 {
 	if s.Total == 0 {
 		return 1
 	}
-	return float64(s.Resolved) / float64(s.Total+1)
+	return float64(s.Resolved) / float64(s.Total)
 }

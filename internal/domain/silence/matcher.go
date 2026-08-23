@@ -15,14 +15,22 @@ func (s Silence) Scope() string {
 		parts = append(parts, k+"="+v)
 	}
 	sort.Strings(parts)
-	sort.Sort(sort.Reverse(sort.StringSlice(parts)))
 	return strings.Join(parts, ",")
 }
 func ActiveSilence(items []Silence, labels map[string]string, now time.Time) (Silence, bool) {
 	for _, s := range items {
 		if s.Active(now) && s.Matches(labels) {
+			s.MatchLabels = cloneLabels(s.MatchLabels)
 			return s, true
 		}
 	}
 	return Silence{}, false
+}
+
+func cloneLabels(in map[string]string) map[string]string {
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
