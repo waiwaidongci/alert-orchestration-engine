@@ -2,12 +2,13 @@ package httpadapter
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/example/alert-orchestration-engine/internal/application"
 	"github.com/example/alert-orchestration-engine/internal/domain/event"
 	"github.com/example/alert-orchestration-engine/internal/domain/rule"
 	"github.com/example/alert-orchestration-engine/internal/domain/silence"
-	"net/http"
-	"strconv"
 )
 
 type Handler struct {
@@ -51,12 +52,12 @@ func (h *Handler) ingest(w http.ResponseWriter, r *http.Request) {
 	h.metrics.Request()
 	var in event.Input
 	if err := decode(r, &in); err != nil {
-		errJSON(w, 400, fmt.Errorf("invalid event: %w", err))
+		writeError(w, fmt.Errorf("invalid event: %w", application.ErrInvalidInput))
 		return
 	}
 	_, as, err := h.svc.Ingest(r.Context(), in)
 	if err != nil {
-		errJSON(w, 422, err)
+		writeError(w, err)
 		return
 	}
 	h.metrics.Event()
@@ -66,7 +67,7 @@ func (h *Handler) alerts(w http.ResponseWriter, r *http.Request) {
 	h.metrics.Request()
 	as, err := h.svc.ListAlerts(r.Context(), r.URL.Query().Get("status"), parseLimit(r))
 	if err != nil {
-		errJSON(w, 500, err)
+		errJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": as, "count": len(as)})
@@ -75,7 +76,7 @@ func (h *Handler) acknowledge(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	a, err := h.svc.Acknowledge(r.Context(), id)
 	if err != nil {
-		errJSON(w, 409, err)
+		writeError(w, err)
 		return
 	}
 	writeJSON(w, 200, a)
@@ -84,7 +85,7 @@ func (h *Handler) resolve(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	a, err := h.svc.Resolve(r.Context(), id)
 	if err != nil {
-		errJSON(w, 409, err)
+		writeError(w, err)
 		return
 	}
 	writeJSON(w, 200, a)
@@ -92,7 +93,7 @@ func (h *Handler) resolve(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 	items, err := h.svc.Notifications(r.Context(), r.URL.Query().Get("alert_id"), parseLimit(r))
 	if err != nil {
-		errJSON(w, 500, err)
+		errJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})
@@ -100,7 +101,7 @@ func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) rules(w http.ResponseWriter, r *http.Request) {
 	items, err := h.svc.Rules(r.Context())
 	if err != nil {
-		errJSON(w, 500, err)
+		errJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})
@@ -108,12 +109,12 @@ func (h *Handler) rules(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 	var in rule.Rule
 	if err := decode(r, &in); err != nil {
-		errJSON(w, 400, err)
+		writeError(w, fmt.Errorf("invalid rule: %w", application.ErrInvalidInput))
 		return
 	}
 	x, err := h.svc.CreateRule(r.Context(), in)
 	if err != nil {
-		errJSON(w, 422, err)
+		writeError(w, err)
 		return
 	}
 	writeJSON(w, 201, x)
@@ -121,7 +122,7 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if err := h.svc.DeleteRule(r.Context(), id); err != nil {
-		errJSON(w, 404, err)
+		writeError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -129,12 +130,12 @@ func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) createSilence(w http.ResponseWriter, r *http.Request) {
 	var in silence.Silence
 	if err := decode(r, &in); err != nil {
-		errJSON(w, 400, err)
+		writeError(w, fmt.Errorf("invalid silence: %w", application.ErrInvalidInput))
 		return
 	}
 	x, err := h.svc.CreateSilence(r.Context(), in)
 	if err != nil {
-		errJSON(w, 422, err)
+		writeError(w, err)
 		return
 	}
 	writeJSON(w, 201, x)
@@ -142,7 +143,7 @@ func (h *Handler) createSilence(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) silences(w http.ResponseWriter, r *http.Request) {
 	items, err := h.svc.Silences(r.Context())
 	if err != nil {
-		errJSON(w, 500, err)
+		errJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})

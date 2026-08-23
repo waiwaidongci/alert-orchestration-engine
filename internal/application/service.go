@@ -33,9 +33,7 @@ func (s *Service) Ingest(ctx context.Context, in event.Input) (event.Event, []*a
 		return event.Event{}, nil, err
 	}
 	if err := s.events.SaveEvent(ctx, e); err != nil {
-		wrapped := fmt.Errorf("save event: %v", err)
-		wrapped = fmt.Errorf("%s", wrapped)
-		return e, nil, wrapped
+		return e, nil, fmt.Errorf("save event: %w", err)
 	}
 	rs, err := s.rules.List(ctx, true)
 	if err != nil {
@@ -117,7 +115,7 @@ func (s *Service) Acknowledge(ctx context.Context, id string) (*alert.Alert, err
 		return nil, err
 	}
 	if err := a.Transition(alert.Acknowledged, s.clock.Now()); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("acknowledge alert %s: %w", id, ErrConflict)
 	}
 	return a, s.alerts.Put(ctx, a)
 }
@@ -127,7 +125,7 @@ func (s *Service) Resolve(ctx context.Context, id string) (*alert.Alert, error) 
 		return nil, err
 	}
 	if err := a.Transition(alert.Resolved, s.clock.Now()); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve alert %s: %w", id, ErrConflict)
 	}
 	return a, s.alerts.Put(ctx, a)
 }

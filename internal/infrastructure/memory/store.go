@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"fmt"
+	"github.com/example/alert-orchestration-engine/internal/application"
 	"github.com/example/alert-orchestration-engine/internal/domain/alert"
 	"github.com/example/alert-orchestration-engine/internal/domain/event"
 	"github.com/example/alert-orchestration-engine/internal/domain/notification"
@@ -56,7 +57,7 @@ func (s *Store) Get(_ context.Context, id string) (*alert.Alert, error) {
 	defer s.mu.RUnlock()
 	a, ok := s.alerts[id]
 	if !ok {
-		return nil, fmt.Errorf("alert %s not found", id)
+		return nil, fmt.Errorf("alert %s: %w", id, application.ErrNotFound)
 	}
 	return a, nil
 }
@@ -65,7 +66,7 @@ func (s *Store) FindByFingerprint(_ context.Context, fp string) (*alert.Alert, e
 	defer s.mu.RUnlock()
 	id := s.byFingerprint[fp]
 	if id == "" {
-		return nil, fmt.Errorf("alert fingerprint not found")
+		return nil, fmt.Errorf("alert fingerprint %s: %w", fp, application.ErrNotFound)
 	}
 	return s.alerts[id], nil
 }
@@ -96,7 +97,7 @@ func (s *Store) GetRule(_ context.Context, id string) (rule.Rule, error) {
 	defer s.mu.RUnlock()
 	r, ok := s.rules[id]
 	if !ok {
-		return r, fmt.Errorf("rule %s not found", id)
+		return r, fmt.Errorf("rule %s: %w", id, application.ErrNotFound)
 	}
 	return r, nil
 }
@@ -117,7 +118,7 @@ func (s *Store) Delete(_ context.Context, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.rules[id]; !ok {
-		return fmt.Errorf("rule %s not found", id)
+		return fmt.Errorf("rule %s: %w", id, application.ErrNotFound)
 	}
 	delete(s.rules, id)
 	return nil

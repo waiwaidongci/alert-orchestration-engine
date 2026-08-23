@@ -17,5 +17,5 @@ func decode(r *http.Request, v any) error {
 	return d.Decode(v)
 }
 func errJSON(w http.ResponseWriter, status int, err error) {
-	writeJSON(w, status, map[string]any{"error": map[string]any{"code": status, "message": err.Error()}})
+	writeJSON(w, status, map[string]any{"error": map[string]any{"code": errCode(err), "message": err.Error()}})
 }

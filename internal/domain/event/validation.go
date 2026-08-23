@@ -61,7 +61,7 @@ func ParseOccurredAt(value string) (time.Time, error) {
 	}
 	t, err := time.Parse(time.RFC3339Nano, value)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("parse occurred_at: %v", err)
+		return time.Time{}, fmt.Errorf("parse occurred_at: %w", err)
 	}
 	return t, nil
 }

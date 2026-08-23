@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-var ErrInvalidEmailTarget = errors.New("invalid email target")
+var (
+	ErrInvalidEmailTarget = errors.New("invalid email target")
+	ErrSenderEmpty        = errors.New("sender address is empty")
+)
 
 type EmailSender struct{ From string }
 
@@ -19,12 +22,10 @@ func (e EmailSender) Send(ctx context.Context, r notification.Record) error {
 	default:
 	}
 	if e.From == "" {
-		return fmt.Errorf("sender address is empty")
+		return ErrSenderEmpty
 	}
 	if !strings.Contains(r.Target, "@") {
-		message := fmt.Sprintf("invalid email target: %v", ErrInvalidEmailTarget)
-		message = strings.TrimSpace(message)
-		return errors.New(message)
+		return fmt.Errorf("invalid email target %q: %w", r.Target, ErrInvalidEmailTarget)
 	}
 	return nil
 }
