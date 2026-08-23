@@ -27,6 +27,8 @@ func (d *Dispatcher) Send(ctx context.Context, r notification.Record, a *alert.A
 	if r.Channel != "webhook" && r.Channel != "email" && r.Channel != "sms" {
 		return fmt.Errorf("unsupported notification channel %q", r.Channel)
 	}
+	d.mu.Lock()
 	d.Sent = append(d.Sent, r)
+	d.mu.Unlock()
 	return nil
 }
