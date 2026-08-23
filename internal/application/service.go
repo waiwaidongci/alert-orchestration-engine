@@ -91,15 +91,11 @@ func (s *Service) dispatch(ctx context.Context, a *alert.Alert, r rule.Rule) {
 }
 func (s *Service) send(ctx context.Context, rec notification.Record, a *alert.Alert) {
 	err := s.notifier.Send(ctx, rec, a)
+	now := s.clock.Now()
 	if err == nil {
-		now := s.clock.Now()
-		rec.Status = notification.Sent
-		rec.Attempts++
-		rec.SentAt = &now
+		rec.MarkSent(now)
 	} else {
-		rec.Status = notification.Failed
-		rec.Attempts++
-		rec.Error = err.Error()
+		rec.MarkFailed(err, now)
 	}
 	_ = s.notifications.Update(ctx, rec)
 }

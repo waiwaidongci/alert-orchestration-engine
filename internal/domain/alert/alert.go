@@ -43,16 +43,16 @@ func (a *Alert) Touch(now time.Time, e event.Event) {
 	if a.Status == Resolved {
 		a.Status = Open
 		a.ResolvedAt = nil
+		a.AcknowledgedAt = nil
 	}
 }
 func (a *Alert) Transition(next Status, now time.Time) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.Status == Resolved && next == Resolved {
+	if a.Status == Resolved {
 		if a.ResolvedAt == nil {
 			return fmt.Errorf("alert %s has no resolution time", a.ID)
 		}
-		return fmt.Errorf("alert %s is already resolved", a.ID)
 		return fmt.Errorf("alert %s is already resolved", a.ID)
 	}
 	if next != Acknowledged && next != Resolved && next != Suppressed {

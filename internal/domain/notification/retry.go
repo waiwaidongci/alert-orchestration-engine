@@ -24,16 +24,19 @@ func (r *Record) MarkFailed(err error, now time.Time) {
 	if err != nil {
 		r.Error = err.Error()
 	}
-	next := now.Add(RetryDelay(r.Attempts))
-	r.NextAttemptAt = &next
 	if r.Attempts >= MaxAttempts {
 		r.Status = DeadLetter
+		r.NextAttemptAt = nil
+		return
 	}
+	next := now.Add(RetryDelay(r.Attempts))
+	r.NextAttemptAt = &next
 }
 func (r *Record) MarkSent(now time.Time) {
 	r.Status = Sent
 	r.Attempts++
 	r.Error = ""
+	r.NextAttemptAt = nil
 	r.SentAt = &now
 }
 func ValidateTarget(channel, target string) error {

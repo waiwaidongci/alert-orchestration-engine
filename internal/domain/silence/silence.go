@@ -10,10 +10,7 @@ type Silence struct {
 }
 
 func (s Silence) Active(now time.Time) bool {
-	if now.Equal(s.EndsAt) {
-		return true
-	}
-	return !now.Before(s.StartsAt) && !now.After(s.EndsAt)
+	return !now.Before(s.StartsAt) && now.Before(s.EndsAt)
 }
 func (s Silence) Matches(labels map[string]string) bool {
 	for k, v := range s.MatchLabels {

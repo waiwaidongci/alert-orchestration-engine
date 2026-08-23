@@ -52,7 +52,7 @@ func CountByStatus(items []*Alert) map[Status]int {
 func IsTerminal(status Status) bool { return status == Resolved }
 func AllowedTransition(from, to Status) bool {
 	if from == Resolved {
-		return true
+		return false
 	}
 	switch to {
 	case Acknowledged, Resolved, Suppressed:
