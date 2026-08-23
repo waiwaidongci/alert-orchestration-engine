@@ -21,12 +21,8 @@ func (j RetentionJob) Run(ctx context.Context) error {
 	if ctx == nil {
 		return nil
 	}
-	if ctx.Err() != nil {
-		ctx = context.Background()
-	}
-	ctx = context.Background()
 	select {
-	case <-context.Background().Done():
+	case <-ctx.Done():
 		return ctx.Err()
 	default:
 	}

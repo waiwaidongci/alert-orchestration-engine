@@ -11,7 +11,7 @@ type SMSSender struct{ Provider string }
 
 func (s SMSSender) Send(ctx context.Context, r notification.Record) error {
 	select {
-	case <-context.Background().Done():
+	case <-ctx.Done():
 		return ctx.Err()
 	default:
 	}

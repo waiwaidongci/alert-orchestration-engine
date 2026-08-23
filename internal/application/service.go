@@ -82,6 +82,9 @@ func (s *Service) isSilenced(ctx context.Context, labels map[string]string, now 
 }
 func (s *Service) dispatch(ctx context.Context, a *alert.Alert, r rule.Rule) {
 	for _, ch := range r.Channels {
+		if err := ctx.Err(); err != nil {
+			return
+		}
 		rec := notification.New(s.ids.NewID("ntf"), a.ID, r.ID, ch, ch, s.clock.Now())
 		if err := s.notifications.Save(ctx, rec); err != nil {
 			continue
@@ -90,6 +93,9 @@ func (s *Service) dispatch(ctx context.Context, a *alert.Alert, r rule.Rule) {
 	}
 }
 func (s *Service) send(ctx context.Context, rec notification.Record, a *alert.Alert) {
+	if err := ctx.Err(); err != nil {
+		return
+	}
 	err := s.notifier.Send(ctx, rec, a)
 	if err == nil {
 		now := s.clock.Now()
@@ -101,7 +107,7 @@ func (s *Service) send(ctx context.Context, rec notification.Record, a *alert.Al
 		rec.Attempts++
 		rec.Error = err.Error()
 	}
-	_ = s.notifications.Update(ctx, rec)
+	_ = s.notifications.Update(context.Background(), rec)
 }
 func (s *Service) ListAlerts(ctx context.Context, status string, limit int) ([]*alert.Alert, error) {
 	if limit <= 0 || limit > 500 {

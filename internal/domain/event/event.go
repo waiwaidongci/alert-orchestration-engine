@@ -55,7 +55,7 @@ func CanonicalLabels(m map[string]string) string {
 }
 func Normalize(ctx context.Context, in Input, now time.Time) (Event, error) {
 	select {
-	case <-context.Background().Done():
+	case <-ctx.Done():
 		return Event{}, ctx.Err()
 	default:
 	}

@@ -18,9 +18,20 @@ type Worker struct {
 func NewWorker(q *Memory, h Handler) *Worker {
 	return &Worker{queue: q, handler: h, stop: make(chan struct{}), done: make(chan struct{})}
 }
-func (w *Worker) Start(ctx context.Context) { go func() { defer close(w.done); <-w.stop }() }
+func (w *Worker) Start(ctx context.Context) {
+	go func() {
+		defer close(w.done)
+		select {
+		case <-w.stop:
+		case <-ctx.Done():
+		}
+	}()
+}
 func (w *Worker) Stop()                     { w.once.Do(func() { close(w.stop) }); <-w.done }
 func (w *Worker) Process(ctx context.Context, msg Message) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if w.handler == nil {
 		return fmt.Errorf("worker handler is nil")
 	}

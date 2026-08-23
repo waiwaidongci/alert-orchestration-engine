@@ -26,13 +26,19 @@ type Store struct {
 func NewStore() *Store {
 	return &Store{alerts: map[string]*alert.Alert{}, byFingerprint: map[string]string{}, rules: map[string]rule.Rule{}, silences: map[string]silence.Silence{}, notifications: map[string]notification.Record{}}
 }
-func (s *Store) SaveEvent(_ context.Context, e event.Event) error {
+func (s *Store) SaveEvent(ctx context.Context, e event.Event) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.events = append(s.events, e)
 	return nil
 }
-func (s *Store) ListEvents(_ context.Context, limit int) ([]event.Event, error) {
+func (s *Store) ListEvents(ctx context.Context, limit int) ([]event.Event, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if limit <= 0 || limit > len(s.events) {
@@ -44,14 +50,20 @@ func (s *Store) ListEvents(_ context.Context, limit int) ([]event.Event, error) 
 	}
 	return out, nil
 }
-func (s *Store) Put(_ context.Context, a *alert.Alert) error {
+func (s *Store) Put(ctx context.Context, a *alert.Alert) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.alerts[a.ID] = a
 	s.byFingerprint[a.Fingerprint] = a.ID
 	return nil
 }
-func (s *Store) Get(_ context.Context, id string) (*alert.Alert, error) {
+func (s *Store) Get(ctx context.Context, id string) (*alert.Alert, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	a, ok := s.alerts[id]
@@ -60,7 +72,10 @@ func (s *Store) Get(_ context.Context, id string) (*alert.Alert, error) {
 	}
 	return a, nil
 }
-func (s *Store) FindByFingerprint(_ context.Context, fp string) (*alert.Alert, error) {
+func (s *Store) FindByFingerprint(ctx context.Context, fp string) (*alert.Alert, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	id := s.byFingerprint[fp]
@@ -69,7 +84,10 @@ func (s *Store) FindByFingerprint(_ context.Context, fp string) (*alert.Alert, e
 	}
 	return s.alerts[id], nil
 }
-func (s *Store) List(_ context.Context, status alert.Status, limit int) ([]*alert.Alert, error) {
+func (s *Store) List(ctx context.Context, status alert.Status, limit int) ([]*alert.Alert, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := make([]*alert.Alert, 0)
@@ -85,13 +103,19 @@ func (s *Store) List(_ context.Context, status alert.Status, limit int) ([]*aler
 	}
 	return out, nil
 }
-func (s *Store) Save(_ context.Context, r rule.Rule) error {
+func (s *Store) Save(ctx context.Context, r rule.Rule) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.rules[r.ID] = r
 	return nil
 }
-func (s *Store) GetRule(_ context.Context, id string) (rule.Rule, error) {
+func (s *Store) GetRule(ctx context.Context, id string) (rule.Rule, error) {
+	if err := ctx.Err(); err != nil {
+		return rule.Rule{}, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	r, ok := s.rules[id]
@@ -100,7 +124,10 @@ func (s *Store) GetRule(_ context.Context, id string) (rule.Rule, error) {
 	}
 	return r, nil
 }
-func (s *Store) ListRules(_ context.Context, enabled bool) ([]rule.Rule, error) {
+func (s *Store) ListRules(ctx context.Context, enabled bool) ([]rule.Rule, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := []rule.Rule{}
@@ -113,7 +140,10 @@ func (s *Store) ListRules(_ context.Context, enabled bool) ([]rule.Rule, error) 
 	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
 	return out, nil
 }
-func (s *Store) Delete(_ context.Context, id string) error {
+func (s *Store) Delete(ctx context.Context, id string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.rules[id]; !ok {
@@ -122,13 +152,19 @@ func (s *Store) Delete(_ context.Context, id string) error {
 	delete(s.rules, id)
 	return nil
 }
-func (s *Store) SaveSilence(_ context.Context, x silence.Silence) error {
+func (s *Store) SaveSilence(ctx context.Context, x silence.Silence) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.silences[x.ID] = x
 	return nil
 }
-func (s *Store) ListSilences(_ context.Context, active bool) ([]silence.Silence, error) {
+func (s *Store) ListSilences(ctx context.Context, active bool) ([]silence.Silence, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := []silence.Silence{}
@@ -141,19 +177,28 @@ func (s *Store) ListSilences(_ context.Context, active bool) ([]silence.Silence,
 	return out, nil
 }
 func timeNow() time.Time { return time.Now().UTC() }
-func (s *Store) SaveNotification(_ context.Context, x notification.Record) error {
+func (s *Store) SaveNotification(ctx context.Context, x notification.Record) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.notifications[x.ID] = x
 	return nil
 }
-func (s *Store) UpdateNotification(_ context.Context, x notification.Record) error {
+func (s *Store) UpdateNotification(ctx context.Context, x notification.Record) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.notifications[x.ID] = x
 	return nil
 }
-func (s *Store) ListNotifications(_ context.Context, alertID string, limit int) ([]notification.Record, error) {
+func (s *Store) ListNotifications(ctx context.Context, alertID string, limit int) ([]notification.Record, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := []notification.Record{}

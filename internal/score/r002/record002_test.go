@@ -1,0 +1,44 @@
+package r002
+
+import (
+	"context"
+	"errors"
+	"github.com/example/alert-orchestration-engine/internal/application"
+	"github.com/example/alert-orchestration-engine/internal/domain/event"
+	"github.com/example/alert-orchestration-engine/internal/domain/notification"
+	"github.com/example/alert-orchestration-engine/internal/infrastructure/memory"
+	"github.com/example/alert-orchestration-engine/internal/infrastructure/notifier"
+	"log/slog"
+	"testing"
+	"time"
+)
+
+func TestR002Retention(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	c()
+	if !errors.Is((application.RetentionJob{Log: slog.Default()}).Run(ctx), context.Canceled) {
+		t.Fatal("cancel ignored")
+	}
+}
+func TestR002Store(t *testing.T) {
+	s := memory.NewStore()
+	ctx, c := context.WithCancel(context.Background())
+	c()
+	if !errors.Is(s.SaveEvent(ctx, event.Event{ID: "x"}), context.Canceled) {
+		t.Fatal("cancel ignored")
+	}
+}
+func TestR002SMS(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	c()
+	if !errors.Is((notifier.SMSSender{Provider: "p"}).Send(ctx, notification.Record{Target: "+1"}), context.Canceled) {
+		t.Fatal("cancel ignored")
+	}
+}
+func TestR002Normalize(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	c()
+	if _, e := event.Normalize(ctx, event.Input{Source: "a", Name: "b"}, time.Now()); !errors.Is(e, context.Canceled) {
+		t.Fatal(e)
+	}
+}

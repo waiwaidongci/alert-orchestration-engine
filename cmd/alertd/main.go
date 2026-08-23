@@ -32,6 +32,10 @@ func main() {
 	metrics := &httpadapter.Metrics{}
 	h := httpadapter.NewHandler(svc, metrics, func() bool { return true })
 	srv := &http.Server{Addr: fmt.Sprintf("%s:%d", c.Host, c.Port), Handler: httpadapter.Timeout(15*time.Second, httpadapter.Chain(h.Routes(), log)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	rootCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	retry := application.NewRetryWorker(log, memory.NotificationRepo{S: store})
+	retry.Start(rootCtx)
 	go func() {
 		log.Info("alert orchestration service started", "address", srv.Addr, "environment", c.Environment)
 		if e := srv.ListenAndServe(); e != nil && !errors.Is(e, http.ErrServerClosed) {
@@ -39,13 +43,12 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-	<-ctx.Done()
+	<-rootCtx.Done()
 	shutdown, cancel := context.WithTimeout(context.Background(), time.Duration(c.ShutdownSeconds)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdown); err != nil {
 		log.Error("graceful shutdown failed", "error", err)
 	}
+	retry.Stop()
 	log.Info("service stopped")
 }
