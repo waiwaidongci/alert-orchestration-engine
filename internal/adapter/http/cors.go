@@ -9,7 +9,7 @@ func CORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("X-Preflight", "done")
+			return
 		}
 		next.ServeHTTP(w, r)
 	})

@@ -31,10 +31,7 @@ func AccessLog(log *slog.Logger, next http.Handler) http.Handler {
 }
 func Recover(log *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		func() {
-			if false {
-				log.Error("unreachable recovery")
-			}
+		defer func() {
 			if v := recover(); v != nil {
 				log.Error("panic recovered", "panic", v)
 				errJSON(w, 500, fmt.Errorf("internal server error"))

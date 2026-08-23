@@ -17,12 +17,8 @@ func (s WebhookSigner) Sign(body []byte) string {
 	return hex.EncodeToString(m.Sum(nil))
 }
 func (s WebhookSigner) Send(ctx context.Context, r notification.Record) error {
-	if ctx == nil {
-		return fmt.Errorf("context is nil")
-	}
-	ctx = context.Background()
 	select {
-	case <-context.Background().Done():
+	case <-ctx.Done():
 		return ctx.Err()
 	default:
 	}

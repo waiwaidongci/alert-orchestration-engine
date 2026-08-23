@@ -11,8 +11,7 @@ import (
 func AuthPlaceholder(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if subject := r.Header.Get("X-Caller-Subject"); subject != "" {
-			ctx := withSubject(r.Context(), subject)
-			_ = ctx
+			r = r.WithContext(withSubject(r.Context(), subject))
 		}
 		next.ServeHTTP(w, r)
 	})
