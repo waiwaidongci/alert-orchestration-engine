@@ -1,0 +1,15 @@
+services:
+  alertd:
+    build: ..
+    ports: ["8092:8092"]
+    environment:
+      ALERT_PORT: "8092"
+      ALERT_ENV: "docker"
+    restart: unless-stopped
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: alerts
+      POSTGRES_USER: alerts
+      POSTGRES_PASSWORD: alerts
+    ports: ["5432:5432"]
