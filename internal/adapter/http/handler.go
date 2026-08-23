@@ -1,6 +1,7 @@
 package httpadapter
 
 import (
+	"errors"
 	"fmt"
 	"github.com/example/alert-orchestration-engine/internal/application"
 	"github.com/example/alert-orchestration-engine/internal/domain/event"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 )
+
+var errHandlerNotReady = errors.New("service is not initialized")
 
 type Handler struct {
 	svc     *application.Service
@@ -54,6 +57,10 @@ func (h *Handler) ingest(w http.ResponseWriter, r *http.Request) {
 		errJSON(w, 400, fmt.Errorf("invalid event: %w", err))
 		return
 	}
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	_, as, err := h.svc.Ingest(r.Context(), in)
 	if err != nil {
 		errJSON(w, 422, err)
@@ -64,6 +71,10 @@ func (h *Handler) ingest(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) alerts(w http.ResponseWriter, r *http.Request) {
 	h.metrics.Request()
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	as, err := h.svc.ListAlerts(r.Context(), r.URL.Query().Get("status"), parseLimit(r))
 	if err != nil {
 		errJSON(w, 500, err)
@@ -73,6 +84,10 @@ func (h *Handler) alerts(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) acknowledge(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	a, err := h.svc.Acknowledge(r.Context(), id)
 	if err != nil {
 		errJSON(w, 409, err)
@@ -82,6 +97,10 @@ func (h *Handler) acknowledge(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) resolve(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	a, err := h.svc.Resolve(r.Context(), id)
 	if err != nil {
 		errJSON(w, 409, err)
@@ -90,6 +109,10 @@ func (h *Handler) resolve(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, a)
 }
 func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	items, err := h.svc.Notifications(r.Context(), r.URL.Query().Get("alert_id"), parseLimit(r))
 	if err != nil {
 		errJSON(w, 500, err)
@@ -98,6 +121,10 @@ func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})
 }
 func (h *Handler) rules(w http.ResponseWriter, r *http.Request) {
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	items, err := h.svc.Rules(r.Context())
 	if err != nil {
 		errJSON(w, 500, err)
@@ -111,6 +138,10 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 		errJSON(w, 400, err)
 		return
 	}
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	x, err := h.svc.CreateRule(r.Context(), in)
 	if err != nil {
 		errJSON(w, 422, err)
@@ -120,6 +151,10 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	if err := h.svc.DeleteRule(r.Context(), id); err != nil {
 		errJSON(w, 404, err)
 		return
@@ -132,6 +167,10 @@ func (h *Handler) createSilence(w http.ResponseWriter, r *http.Request) {
 		errJSON(w, 400, err)
 		return
 	}
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	x, err := h.svc.CreateSilence(r.Context(), in)
 	if err != nil {
 		errJSON(w, 422, err)
@@ -140,6 +179,10 @@ func (h *Handler) createSilence(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 201, x)
 }
 func (h *Handler) silences(w http.ResponseWriter, r *http.Request) {
+	if h.svc == nil {
+		errJSON(w, 503, errHandlerNotReady)
+		return
+	}
 	items, err := h.svc.Silences(r.Context())
 	if err != nil {
 		errJSON(w, 500, err)

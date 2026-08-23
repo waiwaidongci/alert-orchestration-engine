@@ -2,8 +2,10 @@ package httpadapter
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -12,7 +14,14 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 func decode(r *http.Request, v any) error {
-	d := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
+	if r == nil {
+		return fmt.Errorf("request is required")
+	}
+	body := r.Body
+	if body == nil {
+		body = io.NopCloser(strings.NewReader(""))
+	}
+	d := json.NewDecoder(io.LimitReader(body, 1<<20))
 	d.DisallowUnknownFields()
 	return d.Decode(v)
 }

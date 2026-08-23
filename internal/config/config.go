@@ -52,6 +52,9 @@ func Load(path string) (Config, error) {
 }
 
 func parseYAML(s string, c *Config) {
+	if c == nil {
+		return
+	}
 	for _, line := range strings.Split(s, "\n") {
 		parts := strings.SplitN(strings.TrimSpace(line), ":", 2)
 		if len(parts) != 2 {
