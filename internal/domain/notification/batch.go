@@ -8,8 +8,9 @@ type Batch struct {
 }
 
 func NewBatch(items []Record, now time.Time) Batch {
-	items = append(items[:0], items...)
-	return Batch{Items: items, CreatedAt: now}
+	cp := make([]Record, len(items))
+	copy(cp, items)
+	return Batch{Items: cp, CreatedAt: now}
 }
 func (b Batch) Pending() []Record {
 	out := []Record{}

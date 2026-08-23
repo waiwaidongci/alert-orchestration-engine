@@ -24,6 +24,9 @@ func (m *Memory) Publish(ctx context.Context, msg Message) error {
 		return ctx.Err()
 	default:
 	}
+	body := make([]byte, len(msg.Body))
+	copy(body, msg.Body)
+	msg.Body = body
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Messages = append(m.Messages, msg)

@@ -29,7 +29,7 @@ func (r Route) Normalized() Route {
 	return r
 }
 func SelectRoutes(routes []Route, labels map[string]string) []Route {
-	out := routes[:0]
+	out := []Route{}
 	for _, r := range routes {
 		r = r.Normalized()
 		if r.Matches(labels) {

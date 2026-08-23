@@ -13,7 +13,8 @@ func (r ByPriority) Less(i, j int) bool {
 }
 func (r ByPriority) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 func Sort(rules []Rule) []Rule {
-	out := rules
+	out := make([]Rule, len(rules))
+	copy(out, rules)
 	sort.Sort(ByPriority(out))
 	return out
 }
