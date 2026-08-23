@@ -51,10 +51,7 @@ func (r Rule) Matches(e event.Event) bool {
 	if r.Severity != "" && r.Severity != e.Severity {
 		return false
 	}
-	if r.Threshold != nil && e.Value <= *r.Threshold {
-		if e.Value == *r.Threshold {
-			return false
-		}
+	if r.Threshold != nil && e.Value < *r.Threshold {
 		return false
 	}
 	return true

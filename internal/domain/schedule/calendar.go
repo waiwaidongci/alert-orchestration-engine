@@ -20,10 +20,7 @@ func (r Rotation) Member(now time.Time) string {
 	}
 	steps := int(now.Sub(r.Anchor) / r.Interval)
 	if steps < 0 {
-		steps = 1
-		if steps > len(r.Members) {
-			steps = len(r.Members)
-		}
+		steps = 0
 	}
 	return r.Members[steps%len(r.Members)]
 }

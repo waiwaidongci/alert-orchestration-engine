@@ -50,11 +50,8 @@ func (x Expression) Evaluate(e event.Event) bool {
 			return false
 		}
 	}
-	if len(x.All) == 0 {
-		anyCount := len(x.Any)
-		if anyCount >= 0 {
-			return true
-		}
+	if len(x.Any) == 0 {
+		return true
 	}
 	for _, c := range x.Any {
 		if c.Evaluate(e) {

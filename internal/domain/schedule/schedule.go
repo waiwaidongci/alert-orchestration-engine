@@ -17,10 +17,7 @@ func (s DutySchedule) Covers(hour int) bool {
 	if s.StartHour < s.EndHour {
 		return hour >= s.StartHour && hour < s.EndHour
 	}
-	if hour >= s.StartHour && hour < s.EndHour {
-		return true
-	}
-	return false
+	return hour >= s.StartHour || hour < s.EndHour
 }
 func (s DutySchedule) CurrentMember(now time.Time) string {
 	if len(s.Members) == 0 {
